@@ -1183,6 +1183,7 @@ class MediaProcessor:
                         self.log("ExifTool stderr:", "orange")
                         for ln in relevant[:30]:
                             self.log(f"  {ln}", "orange")
+                            self.log(f"  {ln}", "orange")
                             # Detect failed files from error messages like:
                             # Error: Error reading OtherImageStart ... - E:/path/to/file.jpg
                             # Error: ... - E:/path/to/file.jpg
@@ -1193,6 +1194,17 @@ class MediaProcessor:
                                     failed_files.append(Path(fpath_str))
                                 except:
                                     pass
+                            
+                            # [NEW] Handle "Temporary file already exists" error
+                            # Error: Temporary file already exists: E:/.../file.jpg_exiftool_tmp
+                            m_tmp = re.search(r'Temporary file already exists:\s+(.+)$', ln, re.IGNORECASE)
+                            if m_tmp:
+                                tmp_file = Path(m_tmp.group(1).strip())
+                                try:
+                                    self.log(f"    Обнаружен зависший temp-файл. Удаление: {tmp_file.name}", "magenta")
+                                    tmp_file.unlink(missing_ok=True)
+                                except Exception as e:
+                                    self.log(f"    Не удалось удалить temp-файл: {e}", "red")
 
                 if rc != 0:
                     self.log(f"ExifTool завершился с кодом {rc} (частичный сбой)", "red")
