@@ -1,0 +1,14 @@
+{
+  "root": "E:\\!MediaLibrary",
+  "exif": "E:\\LibraryFixer\\exiftool\\exiftool.exe",
+  "recursive": true,
+  "shift": false,
+  "folder_priority": false,
+  "interactive": false,
+  "delete_empty": true,
+  "sanitize": true,
+  "autoscroll": true,
+  "start_from": "",
+  "geometry": "1920x1129+208+208",
+  "maximized": true
+}

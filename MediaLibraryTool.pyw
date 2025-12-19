@@ -111,6 +111,80 @@ class MediaLibraryTool(ctk.CTk):
         self._show_welcome_message()
         self._check_queue()
         self._bind_global_shortcuts()
+        
+        # Load Config
+        self.config_file = self.script_dir / "config.json"
+        self.load_config()
+        self.protocol("WM_DELETE_WINDOW", self.on_closing)
+
+    def load_config(self):
+        if not self.config_file.exists():
+            return
+        try:
+            with open(self.config_file, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                
+            if "root" in data:
+                self.entry_root.delete(0, tk.END)
+                self.entry_root.insert(0, data["root"])
+            if "exif" in data:
+                self.entry_exif.delete(0, tk.END)
+                self.entry_exif.insert(0, data["exif"])
+                
+            self.var_recursive.set(data.get("recursive", False))
+            self.var_shift.set(data.get("shift", False))
+            self.var_folder_priority.set(data.get("folder_priority", False))
+            self.var_interactive.set(data.get("interactive", False))
+            self.var_delete_empty.set(data.get("delete_empty", False))
+            self.var_sanitize.set(data.get("sanitize", False))
+            self.var_autoscroll.set(data.get("autoscroll", True))
+            
+            if "start_from" in data:
+                self.entry_start_from.delete(0, tk.END)
+                self.entry_start_from.insert(0, data["start_from"])
+                
+            # Geometry - Apply with slight delay to ensure window manager accepts it
+            def _restore_window():
+                if "geometry" in data:
+                    try:
+                        self.geometry(data["geometry"])
+                    except:
+                        pass
+                if data.get("maximized", False):
+                    try:
+                        self.state("zoomed")
+                    except:
+                        pass
+                        
+            self.after(200, _restore_window)
+                
+        except Exception as e:
+            print(f"Config load error: {e}")
+
+    def save_config(self):
+        data = {
+            "root": self.entry_root.get(),
+            "exif": self.entry_exif.get(),
+            "recursive": self.var_recursive.get(),
+            "shift": self.var_shift.get(),
+            "folder_priority": self.var_folder_priority.get(),
+            "interactive": self.var_interactive.get(),
+            "delete_empty": self.var_delete_empty.get(),
+            "sanitize": self.var_sanitize.get(),
+            "autoscroll": self.var_autoscroll.get(),
+            "start_from": self.entry_start_from.get(),
+            "geometry": self.geometry(),
+            "maximized": (self.state() == "zoomed")
+        }
+        try:
+            with open(self.config_file, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2)
+        except Exception as e:
+            print(f"Config save error: {e}")
+
+    def on_closing(self):
+        self.save_config()
+        self.destroy()
 
     def _bind_global_shortcuts(self):
         # Enable Standard Text Bindings if missing
@@ -122,12 +196,22 @@ class MediaLibraryTool(ctk.CTk):
         try:
             widget = self.focus_get()
             if isinstance(widget, (tk.Entry, tk.Text, scrolledtext.ScrolledText, ctk.CTkEntry)):
-                if isinstance(widget, ctk.CTkEntry): 
-                    # CTK Entry usually handles it, but fallback
-                    pass 
+                text = ""
+                if isinstance(widget, ctk.CTkEntry):
+                    # Access inner entry for selection
+                    try:
+                        text = widget._entry.selection_get()
+                    except:
+                        pass
                 else:
+                    try:
+                        text = widget.selection_get()
+                    except:
+                        pass
+                
+                if text:
                     self.clipboard_clear()
-                    self.clipboard_append(widget.selection_get())
+                    self.clipboard_append(text)
         except:
             pass
     
@@ -137,6 +221,12 @@ class MediaLibraryTool(ctk.CTk):
              if isinstance(widget, (tk.Text, scrolledtext.ScrolledText)):
                  widget.insert("insert", self.clipboard_get())
                  return "break" # Prevent double paste
+             elif isinstance(widget, (tk.Entry, ctk.CTkEntry)):
+                 # For Entry, paste at cursor
+                 text = self.clipboard_get()
+                 if text:
+                     widget.insert("insert", text)
+                 return "break"
         except:
             pass
 
