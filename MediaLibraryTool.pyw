@@ -110,6 +110,47 @@ class MediaLibraryTool(ctk.CTk):
         # self._apply_dark_theme() # Removed, using CTK native theme
         self._show_welcome_message()
         self._check_queue()
+        self._bind_global_shortcuts()
+
+    def _bind_global_shortcuts(self):
+        # Enable Standard Text Bindings if missing
+        self.bind_all("<Control-c>", lambda e: self._on_copy(e))
+        self.bind_all("<Control-v>", lambda e: self._on_paste(e))
+        self.bind_all("<Control-a>", lambda e: self._on_select_all(e))
+
+    def _on_copy(self, event):
+        try:
+            widget = self.focus_get()
+            if isinstance(widget, (tk.Entry, tk.Text, scrolledtext.ScrolledText, ctk.CTkEntry)):
+                if isinstance(widget, ctk.CTkEntry): 
+                    # CTK Entry usually handles it, but fallback
+                    pass 
+                else:
+                    self.clipboard_clear()
+                    self.clipboard_append(widget.selection_get())
+        except:
+            pass
+    
+    def _on_paste(self, event):
+        try:
+             widget = self.focus_get()
+             if isinstance(widget, (tk.Text, scrolledtext.ScrolledText)):
+                 widget.insert("insert", self.clipboard_get())
+                 return "break" # Prevent double paste
+        except:
+            pass
+
+    def _on_select_all(self, event):
+        try:
+            widget = self.focus_get()
+            if isinstance(widget, (tk.Text, scrolledtext.ScrolledText)):
+                widget.tag_add("sel", "1.0", "end")
+                return "break"
+            elif isinstance(widget, tk.Entry):
+                widget.selection_range(0, tk.END)
+                return "break"
+        except:
+            pass
 
     def log(self, msg, color=None):
         self.logger.log(msg, color)
@@ -1472,9 +1513,14 @@ class MediaProcessor:
                 existing_dt = self._parse_exif_date(raw_exif)
 
                 is_match = False
-                if existing_dt and existing_dt == fdate:
-                    is_match = True
-                
+                if existing_dt:
+                    # Tolerance check (5 seconds) to avoid loops on tiny diffs/rounding
+                    delta_sec = abs((existing_dt - fdate).total_seconds())
+                    if delta_sec < 5:
+                        is_match = True
+                    elif existing_dt == fdate: # Exact match
+                         is_match = True
+
                 # DEBUG: Log if mismatch to see what's happening
                 if not is_match:
                      self.log(f"   [DEBUG_DATE] File: {path.name}", "gray")
@@ -1577,7 +1623,15 @@ class MediaProcessor:
 
         # 1) Apply filename-based updates first
         if filename_dates:
-            self.log("\n  ДЕЙСТВИЕ: Обновление Exif/FS из имени файла...", "blue")
+            self.log(f"\n  ДЕЙСТВИЕ: Обновление Exif/FS из имени файла ({len(filename_dates)} шт)...", "blue")
+            
+            # Detailed list of WHO is being updated
+            for idx, item in enumerate(filename_dates):
+                if idx < 15:
+                    self.log(f"    -> {item['path'].name}  (Set: {item['date']})", "gray")
+                elif idx == 15:
+                    self.log(f"    ... и еще {len(filename_dates)-15} файлов", "gray")
+            
             if self.apply:
                 self.run_exif_update(filename_dates, scan_root=folder)
             self.stats.files_fixed_date += len(filename_dates)
