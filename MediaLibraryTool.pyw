@@ -1139,11 +1139,10 @@ class MediaProcessor:
                         "MediaCreateDate": dstr,
                     })
 
-            # Create argfile for scan_root
+            # Create argfile for scan_root (UTF-8)
             arg_file_path = None
             try:
-                # Use 'mbcs' (ANSI)
-                with tempfile.NamedTemporaryFile(mode="w", encoding="mbcs", delete=False) as f:
+                with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", delete=False) as f:
                     f.write(str(scan_root))
                     arg_file_path = f.name
             except Exception:
@@ -1153,10 +1152,11 @@ class MediaProcessor:
                 str(self.exif_path),
                 f"-csv={str(csv_path)}",
                 "-overwrite_original",
+                "-charset", "filename=utf8", # Critical for matching CSV sourcefiles
+                "-charset", "utf8",
                 "-m",
                 "-q", "-q",
                 "-f",
-                # Removed utf8 charsets
                 "-r",
                 "-@", str(arg_file_path) if arg_file_path else str(scan_root)
             ]
@@ -1167,6 +1167,12 @@ class MediaProcessor:
 
                 out_s = out_b.decode("utf-8", errors="replace") if out_b else ""
                 err_s = err_b.decode("utf-8", errors="replace") if err_b else ""
+
+                # Log Success/Fail stats from stdout
+                if out_s.strip():
+                    self.log(f"      ExifTool Result: {out_s.strip()}", "gray")
+
+                failed_files = []
 
                 failed_files = []
 
