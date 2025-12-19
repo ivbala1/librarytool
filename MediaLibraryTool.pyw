@@ -1514,12 +1514,18 @@ class MediaProcessor:
 
                 is_match = False
                 if existing_dt:
-                    # Tolerance check (5 seconds) to avoid loops on tiny diffs/rounding
-                    delta_sec = abs((existing_dt - fdate).total_seconds())
-                    if delta_sec < 5:
+                    # Tolerance check:
+                    # 1. 120 seconds (2 mins) to cover panorama stitching / write delays
+                    # 2. Modulo 3600 checks to ignore UTC/Timezone shift (1h, 2h, 3h...)
+                    diff = abs((existing_dt - fdate).total_seconds())
+                    
+                    if diff < 120:
                         is_match = True
-                    elif existing_dt == fdate: # Exact match
-                         is_match = True
+                    else:
+                        remainder = diff % 3600
+                        # If almost exact hour(s) difference (+/- 2 mins)
+                        if remainder < 120 or remainder > (3600 - 120):
+                             is_match = True
 
                 # DEBUG: Log if mismatch to see what's happening
                 if not is_match:
