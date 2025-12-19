@@ -1495,23 +1495,21 @@ class MediaProcessor:
         # Sanitizer Check
         sanitize_enabled = self.args.get("sanitize", False)
 
-        with os.scandir(str(folder)) as it:
-            for entry in it:
-                if entry.is_file():
-                    p = Path(entry.path)
+        # Use os.walk for recursive scan inside the event folder
+        for root_path, dirs, filenames in os.walk(str(folder)):
+            for name in filenames:
+                p = Path(root_path) / name
+                
+                # Apply sanitization if requested (rename happens here)
+                if sanitize_enabled:
+                    p = self._sanitize_filename(p)
+                    # Note: p is now the NEW path if renamed, or old if not.
                     
-                    # Apply sanitization if requested
-                    if sanitize_enabled:
-                        p = self._sanitize_filename(p)
-                        
-                    # Filter by extension
-                    if p.suffix.lower() in IGNORE_EXTENSIONS:
-                        continue
-                    # If known safe extension or check signature? 
-                    # We just let ExifTool decide or use whitelist?
-                    # Script uses known Exts later.
-                    # Check name for garbage date pattern
-                    files.append(p)
+                # Filter by extension
+                if p.suffix.lower() in IGNORE_EXTENSIONS:
+                    continue
+                    
+                files.append(p)
         
         if not files:
             self.log("  [Нет медиа файлов]", "gray")
