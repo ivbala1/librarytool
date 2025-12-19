@@ -341,9 +341,19 @@ class MediaLibraryTool(ctk.CTk):
         # Style the standard Tk widget to match Dark Theme
         self.log_text.config(bg="#1e1e1e", fg="#e0e0e0", insertbackground="white", relief="flat")
         self.log_text.bind("<Key>", self._on_log_key)
+        # Log Context Menu
         self.context_menu = tk.Menu(self, tearoff=0)
         self.context_menu.add_command(label="Копировать", command=self._copy_selection_context)
         self.log_text.bind("<Button-3>", self._show_context_menu)
+        
+        # Entry Context Menu
+        self.context_menu_entry = tk.Menu(self, tearoff=0)
+        self.context_menu_entry.add_command(label="Вырезать", command=lambda: self._entry_action("<<Cut>>"))
+        self.context_menu_entry.add_command(label="Копировать", command=lambda: self._entry_action("<<Copy>>"))
+        self.context_menu_entry.add_command(label="Вставить", command=lambda: self._entry_action("<<Paste>>"))
+        self.context_menu_entry.add_separator()
+        self.context_menu_entry.add_command(label="Выделить всё", command=lambda: self._entry_action("<<SelectAll>>"))
+
         row += 1
 
         # Search Bar
@@ -392,16 +402,19 @@ class MediaLibraryTool(ctk.CTk):
         self.entry_start_from.pack(side="right")
 
         # Buttons
-        self.btn_dryrun = ctk.CTkButton(frame_ctrl, text="ТЕСТ (Dry Run)", command=self._start_dryrun)
+        btn_font = ctk.CTkFont(size=14, weight="bold")
+
+        self.btn_dryrun = ctk.CTkButton(frame_ctrl, text="ТЕСТ (Dry Run)", font=btn_font, command=self._start_dryrun)
         self.btn_dryrun.pack(fill="x", padx=10, pady=(5,5))
         
         f_btns = ctk.CTkFrame(frame_ctrl, fg_color="transparent")
         f_btns.pack(fill="x", padx=10, pady=(0,10))
         
-        self.btn_apply = ctk.CTkButton(f_btns, text="ПУСК", fg_color="green", hover_color="darkgreen", command=self._start_apply)
+        self.btn_apply = ctk.CTkButton(f_btns, text="ПУСК", font=btn_font, fg_color="green", hover_color="darkgreen", command=self._start_apply)
         self.btn_apply.pack(side="left", fill="x", expand=True, padx=(0, 5))
         
-        self.btn_stop = ctk.CTkButton(f_btns, text="СТОП", fg_color="red", hover_color="darkred", state="disabled", command=self._stop)
+        # Initially Stop is disabled -> Gray
+        self.btn_stop = ctk.CTkButton(f_btns, text="СТОП", font=btn_font, fg_color="gray", state="disabled", command=self._stop)
         self.btn_stop.pack(side="right", fill="x", expand=True)
 
         # 2. Status Bar (Middle)
@@ -417,6 +430,10 @@ class MediaLibraryTool(ctk.CTk):
         self.lbl_stats = ctk.CTkLabel(frame_stats, text="Ожидание...", justify="left", anchor="nw", 
                                       font=ctk.CTkFont(family="Consolas", size=12))
         self.lbl_stats.pack(fill="both", expand=True, padx=5, pady=5)
+
+        # Bind context menu to all entries
+        for entry in (self.entry_root, self.entry_exif, self.entry_search, self.entry_start_from):
+            self._bind_entry_right_click(entry)
 
 
     def _update_stats_panel(self):
@@ -461,6 +478,31 @@ class MediaLibraryTool(ctk.CTk):
 
     def _show_context_menu(self, event):
         self.context_menu.post(event.x_root, event.y_root)
+
+    def _bind_entry_right_click(self, widget):
+        try:
+            # CTK Entry exposes internal widget via _entry
+            widget._entry.bind("<Button-3>", self._show_entry_context_menu)
+        except AttributeError:
+             widget.bind("<Button-3>", self._show_entry_context_menu)
+
+    def _show_entry_context_menu(self, event):
+        # Focus on the widget we clicked so actions apply to it
+        try:
+            event.widget.focus_set()
+            self.context_menu_target = event.widget
+            self.context_menu_entry.post(event.x_root, event.y_root)
+        except:
+            pass
+            
+    def _entry_action(self, event_name):
+        try:
+            # Send event to the focused widget (or the one we right-clicked)
+            widget = self.focus_get()
+            if widget:
+                widget.event_generate(event_name)
+        except:
+            pass
 
     def _copy_selection_context(self):
         try:
@@ -549,15 +591,26 @@ class MediaLibraryTool(ctk.CTk):
         self.after(0, lambda: self.lbl_status.configure(text=msg))
 
     def _toggle_buttons(self, running):
-        state = "disabled" if running else "normal"
-        stop_state = "normal" if running else "disabled"
-        self.btn_dryrun.configure(state=state)
-        self.btn_apply.configure(state=state)
-        self.entry_root.configure(state=state)
-        self.entry_exif.configure(state=state)
-        self.btn_stop.configure(state=stop_state)
+        if running:
+            # RUNNING STATE
+            self.btn_dryrun.configure(state="disabled", fg_color="gray")
+            self.btn_apply.configure(state="disabled", fg_color="gray")
+            self.btn_stop.configure(state="normal", fg_color="red", hover_color="darkred")
+            
+            self.entry_root.configure(state="disabled")
+            self.entry_exif.configure(state="disabled")
+        else:
+            # IDLE STATE
+            # Restore colors
+            self.btn_dryrun.configure(state="normal", fg_color=["#3a7ebf", "#1f538d"]) # Standard CTK blue-ish
+            self.btn_apply.configure(state="normal", fg_color="green", hover_color="darkgreen")
+            self.btn_stop.configure(state="disabled", fg_color="gray") # Disabled look
+
+            self.entry_root.configure(state="normal")
+            self.entry_exif.configure(state="normal")
 
     def _start_dryrun(self):
+
         self._start_engine(apply=False)
 
     def _start_apply(self):
