@@ -1174,8 +1174,6 @@ class MediaProcessor:
 
                 failed_files = []
 
-                failed_files = []
-
                 # Filter common benign warnings
                 if err_s.strip():
                     lines = [ln.strip() for ln in err_s.splitlines() if ln.strip()]
@@ -1619,9 +1617,8 @@ class MediaProcessor:
                     self.log(f"  ДЕЙСТВИЕ: Применение сдвига {shift_delta} к {len(anchors)} файлам...", "magenta")
                     shifted_list = []
                     for a in anchors:
-                        new_date = a["date"] - shift_delta # Ops. Wait. Diff = File - Folder.
-                        # If File is 2008, Folder is 2007. Diff = +1 year.
-                        # We want to make File 2007. So New = File - Diff. Correct.
+                        # Correcting the shift: FileDate - ShiftAmount
+                        new_date = a["date"] - shift_delta 
                         a["date"] = new_date
                         shifted_list.append(a)
                     
