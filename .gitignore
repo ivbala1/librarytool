@@ -1,0 +1,15 @@
+# Logs
+*.log
+*.zip
+
+# Binaries / External Tools
+exiftool/
+*.exe
+
+# Python
+__pycache__/
+*.pyc
+
+# IDE
+.vscode/
+.idea/
