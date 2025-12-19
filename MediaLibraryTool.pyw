@@ -834,8 +834,8 @@ class MediaProcessor:
         # Create argfile for robust path handling
         arg_file_path = None
         try:
-            # Use 'mbcs' (ANSI) for Windows ExifTool compatibility without forcing utf8 toggle
-            with tempfile.NamedTemporaryFile(mode="w", encoding="mbcs", delete=False) as f:
+            # Use 'utf-8' and tell ExifTool to expect it
+            with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", delete=False) as f:
                 f.write(str(folder))
                 arg_file_path = f.name
         except Exception as e:
@@ -844,8 +844,8 @@ class MediaProcessor:
 
         cmd = [
             str(self.exif_path),
-            # Removed "-charset filename=utf8",
-            # Removed "-charset utf8",
+            "-charset", "filename=utf8",
+            "-charset", "utf8",
             "-m",
             "-r",
             "-fast2",
@@ -1241,6 +1241,11 @@ class MediaProcessor:
         target_file = target_folder / src.name
 
         self.log(f"       -> {src.name} в {target_name}", "orange")
+
+        # DEBUG: WinError 123 diagnostics
+        self.log(f"          [DEBUG_PATH] Src: {repr(str(src))}", "gray")
+        self.log(f"          [DEBUG_PATH] Tgt: {repr(str(target_file))}", "gray")
+        self.log(f"          [DEBUG_PATH] Dir: {repr(str(target_folder))}", "gray")
 
         if self.apply:
             try:
