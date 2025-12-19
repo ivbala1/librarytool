@@ -8,7 +8,7 @@
   "delete_empty": true,
   "sanitize": true,
   "autoscroll": true,
-  "start_from": "2020-10",
+  "start_from": "",
   "geometry": "1920x1129+104+104",
   "maximized": true
 }
