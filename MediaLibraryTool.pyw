@@ -398,7 +398,7 @@ class MediaLibraryTool(ctk.CTk):
         f_btns = ctk.CTkFrame(frame_ctrl, fg_color="transparent")
         f_btns.pack(fill="x", padx=10, pady=(0,10))
         
-        self.btn_apply = ctk.CTkButton(f_btns, text="ПРИМЕНИТЬ", fg_color="green", hover_color="darkgreen", command=self._start_apply)
+        self.btn_apply = ctk.CTkButton(f_btns, text="ПУСК", fg_color="green", hover_color="darkgreen", command=self._start_apply)
         self.btn_apply.pack(side="left", fill="x", expand=True, padx=(0, 5))
         
         self.btn_stop = ctk.CTkButton(f_btns, text="СТОП", fg_color="red", hover_color="darkred", state="disabled", command=self._stop)
@@ -598,6 +598,7 @@ class MediaLibraryTool(ctk.CTk):
             "sanitize": self.var_sanitize.get(),
         }
 
+
         self.log(f"\n{'='*40}\nЗАПУСК НОВОЙ СЕССИИ\n{'='*40}", "blue")
 
         self.worker_thread = threading.Thread(target=self._run_logic, args=(args,), daemon=True)
@@ -674,7 +675,7 @@ class MediaLibraryTool(ctk.CTk):
   Используйте это, чтобы исправить файлы с неверным годом/месяцем, сохранив при этом верные файлы.
 
 [Ручное подтверждение]
-  В режиме "ПРИМЕНИТЬ" скрипт будет останавливаться перед каждым изменением 
+  В режиме "ПУСК" скрипт будет останавливаться перед каждым изменением 
   и спрашивать "Вы уверены?". Для массовой обработки лучше отключить.
 
 [Удалять пустые папки и файлы]
@@ -685,7 +686,7 @@ class MediaLibraryTool(ctk.CTk):
 
 [Кнопки]
   ТЕСТ      -> "Сухой прогон". Показывает в логе, что БЫЛО БЫ сделано. Файлы не меняются.
-  ПРИМЕНИТЬ -> Реальное переименование и запись метаданных. Будьте осторожны.
+  ПУСК      -> Реальное переименование и запись метаданных. Будьте осторожны.
 
 ------------------------------------------------================================
 
