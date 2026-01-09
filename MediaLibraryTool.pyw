@@ -20,7 +20,7 @@ MIN_VALID_YEAR = 1900
 SHORT_EVENT_DAYS = 3
 
 # Extensions that are not media and should be ignored early (manual filter)
-IGNORE_EXTENSIONS = {'.ini', '.db', '.tmp'}
+IGNORE_EXTENSIONS = {'.ini', '.db', '.tmp', '.xmp'}
 
 # Files where ExifTool typically doesn't write EXIF; we will set filesystem times via PowerShell
 FS_ONLY_EXTENSIONS = {'.avi', '.bmp', '.crq', '.thm', '.wav'}

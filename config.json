@@ -1,7 +1,7 @@
 {
-  "root": "E:\\!MediaLibrary",
+  "root": "E:\\!MediaLibrary\\2011-04-01 \u0427\u0443\u043a\u043e\u0442\u043a\u0430",
   "exif": "E:\\LibraryFixer\\exiftool\\exiftool.exe",
-  "recursive": true,
+  "recursive": false,
   "shift": false,
   "folder_priority": false,
   "interactive": false,
