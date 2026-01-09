@@ -55,9 +55,12 @@ class ExifHandler:
         Returns:
             (stdout_bytes, stderr_bytes, returncode)
         """
+        # Hide console window on Windows
         si = subprocess.STARTUPINFO()
         si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        si.wShowWindow = subprocess.SW_HIDE
         kwargs["startupinfo"] = si
+        kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
         
         with tempfile.TemporaryFile() as out_tmp, tempfile.TemporaryFile() as err_tmp:
             kwargs["stdout"] = out_tmp
