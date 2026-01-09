@@ -7,7 +7,7 @@
   "interactive": false,
   "delete_empty": true,
   "sanitize": true,
-  "autoscroll": false,
+  "autoscroll": true,
   "start_from": "",
   "geometry": "1920x1129+104+104",
   "maximized": true
