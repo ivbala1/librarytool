@@ -438,11 +438,12 @@ class MediaProcessor:
             for name in filenames:
                 p = Path(root_path) / name
                 
-                if self.sanitize:
-                    p = self._sanitize_filename(p)
-                
+                # Skip ignored extensions BEFORE any processing
                 if p.suffix.lower() in IGNORE_EXTENSIONS:
                     continue
+                
+                if self.sanitize:
+                    p = self._sanitize_filename(p)
                 
                 files.append(p)
         

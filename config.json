@@ -1,13 +1,13 @@
 {
-  "root": "E:\\!MediaLibrary\\2011-04-01 \u0427\u0443\u043a\u043e\u0442\u043a\u0430",
+  "root": "E:\\!MediaLibrary",
   "exif": "E:\\LibraryFixer\\exiftool\\exiftool.exe",
-  "recursive": false,
+  "recursive": true,
   "shift": false,
   "folder_priority": false,
   "interactive": false,
   "delete_empty": true,
   "sanitize": true,
-  "autoscroll": true,
+  "autoscroll": false,
   "start_from": "",
   "geometry": "1920x1129+104+104",
   "maximized": true
